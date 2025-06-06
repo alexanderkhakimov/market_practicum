@@ -1,0 +1,77 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-tables
+      author: alex
+      changes:
+        - createTable:
+            tableName: item
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: title
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: price
+                  type: decimal(10,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: img_path
+                  type: varchar(255)
+              - column:
+                  name: description
+                  type: text
+        - createTable:
+            tableName: orders
+            columns:
+                - column:
+                    name: id
+                    type: bigint
+                    autoIncrement: true
+                    constraints:
+                      primaryKey: true
+                - column:
+                    name: status
+                    type: varchar(255)
+                    constraints:
+                      nullable: false
+        - createTable:
+            tableName: order_item
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: order_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    references: orders(id)
+                    foreignKeyName: fk_order_item_order
+              - column:
+                  name: item_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    references: item(id)
+                    foreignKeyName: fk_order_item_item
+              - column:
+                  name: count
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: price_at_order
+                  type: decimal(10,2)
+                  constraints:
+                    nullable: false
