@@ -6,52 +6,33 @@
 </head>
 
 <body>
-<a href="/orders" style="float:right;">
-    <b>ЗАКАЗЫ &cudarrr;</b>
-</a>
 <a href="/cart/items" style="float:right;">
-    <b>КОРЗИНА &cudarrr;</b>
+    <b>КОРЗИНА ⤵</b>
 </a>
 <a href="/main/items" style="float:right;">
-    <b>ГЛАВНАЯ &cudarrr;</b>
+    <b>ГЛАВНАЯ ⤵</b>
 </a>
-<h1 style="text-align:center" th:if="${newOrder}">Поздравляем! Успешная покупка! &#128578;</h1>
+<a href="/orders" style="float:right;">
+    <b>ЗАКАЗЫ ⤵</b>
+</a>
 <table style="width:70%;margin-left:auto;margin-right:auto;">
     <tr>
         <td>
-            <h2 th:text="${'Заказ №'+order.id()}"></h2>
-        </td>
-    </tr>
-    <tr th:each="item : ${order.items()}">
-        <td>
+            <h2 th:text="'Заказ №' + ${order.id}"></h2>
+            <p th:if="${newOrder}">Заказ успешно создан!</p>
             <table>
-                <tr>
+                <tr th:each="orderItem : ${order.orderItems}">
                     <td>
-                        <a th:href="${'/items/'+item.getId()}">
-                            <img width="300" height="300" th:src="${'http://localhost:8080/'+item.getImgPath()}">
-                        </a>
+                        <img th:src="@{${orderItem.item.imgPath}}" alt="Item image" width="100" height="100">
                     </td>
-                </tr>
-                <tr>
-                    <td>
-                        <b th:text="${item.getTitle()}"></b>
-                    </td>
-                    <td>
-                        <b th:text="${item.getCount()}+' шт.'"></b>
-                    </td>
-                    <td>
-                        <b th:text="${item.getPrice()*item.getCount()}+' руб.'"></b>
-                    </td>
+                    <td th:text="${orderItem.item.title} + ' (' + ${orderItem.count} + ' шт.) ' + ${orderItem.totalPrice} + ' руб.'"></td>
                 </tr>
             </table>
-        </td>
-    </tr>
-    <tr>
-        <td>
-            <h3 th:text="${'Сумма: '+order.totalSum()}+' руб.'"></h3>
+            <p>
+                <b th:text="'Сумма: ' + ${order.totalSum} + ' руб.'"></b>
+            </p>
         </td>
     </tr>
 </table>
 </body>
-
 </html>
