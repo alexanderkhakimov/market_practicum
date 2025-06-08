@@ -3,3 +3,7 @@ databaseChangeLog:
      file: db/changelog/changes/001-create-tables.yaml
   - include:
       file: db/changelog/changes/002-insert-initial-data.yaml
+  - include:
+      file: db/changelog/changes/003-insert-initial-data.yaml
+  - include:
+      file: db/changelog/changes/004-add-count-in-item.yaml

@@ -1,5 +1,7 @@
 package com.example.market.controller;
 
+import com.example.market.helper.CartAction;
+import com.example.market.helper.SortType;
 import com.example.market.model.Item;
 import com.example.market.repository.ItemRepository;
 import com.example.market.service.CartService;
@@ -84,6 +86,14 @@ public class ItemController {
         return "main";
     }
 
+    @GetMapping("/items/{id}")
+    public String getItemPage(@PathVariable Long id, Model model) {
+        Item item = itemRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Товар не найдет!"));
+        model.addAttribute("item", item);
+        return "item";
+    }
+
     @PostMapping("/items/{id}")
     public String updateCart(
             @PathVariable Long id,
@@ -93,7 +103,5 @@ public class ItemController {
     }
 }
 
-enum SortType {
-    NO, ALPHA, PRICE
-}
+
 
