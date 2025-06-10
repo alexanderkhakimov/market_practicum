@@ -1,8 +1,7 @@
 package com.example.market.controller;
 
 import com.example.market.model.Order;
-import com.example.market.repository.OrderRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.market.service.OrderService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,16 +10,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class OrderController {
-    @Autowired
-    private final OrderRepository orderRepository;
 
-    public OrderController(OrderRepository orderRepository) {
-        this.orderRepository = orderRepository;
+    private final OrderService orderService;
+
+    public OrderController(OrderService orderService) {
+        this.orderService = orderService;
     }
 
     @GetMapping("/orders")
     public String getOrdersPage(Model model) {
-        model.addAttribute("orders", orderRepository.findAllByStatusNot("CART"));
+        model.addAttribute("orders", orderService.findAllOrderByStatusNot("CART"));
         return "orders";
     }
 
@@ -29,7 +28,7 @@ public class OrderController {
                                @RequestParam(defaultValue = "false") boolean newOrder,
                                Model model) {
 
-        Order order = orderRepository.findById(id)
+        Order order = orderService.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Заказ не найден"));
         model.addAttribute("order", order);
         model.addAttribute("newOrder", newOrder);

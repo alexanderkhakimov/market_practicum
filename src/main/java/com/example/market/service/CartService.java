@@ -17,10 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CartService {
-    @Autowired
     private final ItemRepository itemRepository;
 
-    @Autowired
     private final OrderRepository orderRepository;
 
     public CartService(ItemRepository itemRepository, OrderRepository orderRepository) {

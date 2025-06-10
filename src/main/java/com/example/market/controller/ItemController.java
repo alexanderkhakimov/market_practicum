@@ -5,6 +5,7 @@ import com.example.market.helper.SortType;
 import com.example.market.model.Item;
 import com.example.market.repository.ItemRepository;
 import com.example.market.service.CartService;
+import com.example.market.service.ItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,14 +21,13 @@ import java.util.Map;
 @Controller
 @RequestMapping("/main")
 public class ItemController {
-    @Autowired
-    private final ItemRepository itemRepository;
 
-    @Autowired
+    private final ItemService itemService;
+
     private final CartService cartService;
 
-    public ItemController(ItemRepository itemRepository, CartService cartService) {
-        this.itemRepository = itemRepository;
+    public ItemController(ItemService itemService, CartService cartService) {
+        this.itemService = itemService;
         this.cartService = cartService;
     }
 
@@ -55,7 +55,7 @@ public class ItemController {
                 pageRequest = PageRequest.of(pageNumber - 1, pageSize);
         }
 
-        Page<Item> itemPage = itemRepository.findBySearch(search, pageRequest);
+        Page<Item> itemPage = itemService.findBySearch(search, pageRequest);
 
         int itemsPerRow = 3;
         List<List<Item>> items = new ArrayList<>();
@@ -88,7 +88,7 @@ public class ItemController {
 
     @GetMapping("/items/{id}")
     public String getItemPage(@PathVariable Long id, Model model) {
-        Item item = itemRepository.findById(id)
+        Item item = itemService.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Товар не найдет!"));
         model.addAttribute("item", item);
         return "item";

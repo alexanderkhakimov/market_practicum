@@ -1,12 +1,9 @@
 package com.example.market.controller;
 
 import com.example.market.helper.CartAction;
-import com.example.market.model.Item;
 import com.example.market.model.Order;
-import com.example.market.repository.ItemRepository;
-import com.example.market.repository.OrderRepository;
 import com.example.market.service.CartService;
-import jakarta.servlet.http.HttpSession;
+import com.example.market.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,28 +11,21 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 @Controller
 public class CartController {
-    @Autowired
-    private final ItemRepository itemRepository;
-    @Autowired
-    private final OrderRepository orderRepository;
-    @Autowired
+    private final OrderService orderService;
+
     private final CartService cartService;
 
-    public CartController(ItemRepository itemRepository, OrderRepository orderRepository, CartService cartService) {
-        this.itemRepository = itemRepository;
-        this.orderRepository = orderRepository;
+    public CartController(OrderService orderService, CartService cartService) {
+        this.orderService = orderService;
         this.cartService = cartService;
     }
 
     @GetMapping("/cart/items")
     public String getCartPage(Model model) {
-        Order cart = orderRepository.findByStatus("CART")
+        Order cart = orderService.findOrderByStatus("CART")
                 .orElseThrow(() -> new IllegalArgumentException("Корзина пустая!"));
         BigDecimal total = BigDecimal.ZERO;
         if (cart != null) {
@@ -58,11 +48,11 @@ public class CartController {
 
     @PostMapping("/buy")
     public String buy() {
-        return orderRepository.findByStatus("CART")
+        return orderService.findOrderByStatus("CART")
                 .filter(cart -> !cart.getOrderItems().isEmpty())
                 .map(cart -> {
                     cart.setStatus("PENDING");
-                    orderRepository.save(cart);
+                    orderService.saveOrder(cart);
                     return "redirect:/orders/" + cart.getId() + "?newOrder=true";
                 })
                 .orElse("redirect:/cart/items");
