@@ -13,4 +13,6 @@ import java.util.List;
 public interface ItemRepository extends JpaRepository<Item, Long> {
     @Query("SELECT i FROM Item i WHERE i.title LIKE %:search% OR i.description LIKE %:search%")
     Page<Item> findBySearch(String search, Pageable pageable);
+
+    Item findByTitle(String title);
 }

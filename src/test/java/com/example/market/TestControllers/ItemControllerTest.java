@@ -1,12 +1,9 @@
-package com.example.market;
+package com.example.market.TestControllers;
 
 import com.example.market.controller.ItemController;
-import com.example.market.helper.CartAction;
-import com.example.market.helper.SortType;
 import com.example.market.model.Item;
 import com.example.market.service.CartService;
 import com.example.market.service.ItemService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -17,7 +14,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
