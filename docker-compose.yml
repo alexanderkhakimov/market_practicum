@@ -1,21 +1,30 @@
+version: '3.8'
+
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql_db:3306/app
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: 19931012
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql_db:3306/market_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     depends_on:
-      - mysql_db
+      mysql_db:
+        condition: service_healthy
 
   mysql_db:
-    image: mysql:latest
+    image: mysql:8.0
     environment:
-      MYSQL_DATABASE: app
+      MYSQL_DATABASE: market_db
       MYSQL_ROOT_PASSWORD: 19931012
     ports:
       - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p19931012"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+
+volumes:
+  mysql_data:
