@@ -6,14 +6,16 @@ import com.example.market.model.Order;
 import com.example.market.model.OrderItem;
 import com.example.market.repository.ItemRepository;
 import com.example.market.repository.OrderRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
-import java.util.Optional;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Service
 public class CartService {
@@ -26,70 +28,93 @@ public class CartService {
         this.orderRepository = orderRepository;
     }
 
-    private Order getOrCreateCart() {
-        Optional<Order> cart = orderRepository.findByStatus("CART");
-        if (cart.isPresent()) {
-            return cart.get();
-        } else {
-            Order newCart = new Order();
-            newCart.setStatus("CART");
-            return orderRepository.save(newCart);
-        }
+    public Mono<Map<Long, Integer>> getCart() {
+
+        return getOrCreateCart()
+                .flatMapIterable(Order::getOrderItems)
+                .filter(orderItem -> orderItem.getItem()!=null)
+                .collectMap(
+                        orderItem -> orderItem.getItem().getId(),
+                        OrderItem::getCount
+                )
+                .onErrorReturn(Collections.emptyMap());
+    }
+    private Mono<Order> getOrCreateCart() {
+        return orderRepository.findByStatus("CART")
+                .switchIfEmpty(Mono.defer(this::createNewCart))
+                .onErrorResume(e -> {
+                    return Mono.error(new ResponseStatusException(
+                            HttpStatus.INTERNAL_SERVER_ERROR,
+                            "Ошибка сервера",
+                            e
+                    ));
+                });
+    }
+
+    private Mono<Order> createNewCart() {
+        return Mono.just(new Order())
+                .doOnNext(cart -> cart.setStatus("CART"))
+                .flatMap(orderRepository::save);
     }
 
     @Transactional
-    public void updateCart(Long itemId, CartAction action) {
-        Order cart = getOrCreateCart();
-        Optional<Item> itemOptional = itemRepository.findById(itemId);
-        if (itemOptional.isEmpty()) {
-            return; // Товар не найден
-        }
-        Item item = itemOptional.get();
+    public Mono<Void> updateCart(Long itemId, CartAction action) {
+        return Mono.zip(
+                        getOrCreateCart(),
+                        itemRepository.findById(itemId)
+                                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Item not found")))
+                )
+                .flatMap(tuple -> {
+                    Order cart = tuple.getT1();
+                    Item item = tuple.getT2();
 
-        // Ищем существующий OrderItem
-        Optional<OrderItem> existingOrderItem = cart.getOrderItems().stream()
+                    return findOrderItemInCart(cart, itemId)
+                            .flatMap(orderItem -> handleExistingItem(cart, orderItem, action))
+                            .switchIfEmpty(Mono.defer(() -> handleNewItem(cart, item, action)));
+                })
+                .then();
+    }
+
+    private Mono<OrderItem> findOrderItemInCart(Order cart, Long itemId) {
+        return Flux.fromIterable(cart.getOrderItems())
                 .filter(oi -> oi.getItem().getId().equals(itemId))
-                .findFirst();
+                .next();
+    }
 
+    private Mono<Order> handleExistingItem(Order cart, OrderItem orderItem, CartAction action) {
         switch (action) {
             case PLUS:
-                if (existingOrderItem.isPresent()) {
-                    OrderItem orderItem = existingOrderItem.get();
-                    orderItem.setCount(orderItem.getCount() + 1);
-                } else {
-                    OrderItem newOrderItem = new OrderItem();
-                    newOrderItem.setOrder(cart);
-                    newOrderItem.setItem(item);
-                    newOrderItem.setCount(1);
-                    newOrderItem.setPriceAtOrder(item.getPrice());
-                    cart.getOrderItems().add(newOrderItem);
-                }
+                orderItem.setCount(orderItem.getCount() + 1);
                 break;
             case MINUS:
-                if (existingOrderItem.isPresent()) {
-                    OrderItem orderItem = existingOrderItem.get();
-                    if (orderItem.getCount() > 1) {
-                        orderItem.setCount(orderItem.getCount() - 1);
-                    } else {
-                        cart.getOrderItems().remove(orderItem);
-                    }
+                if (orderItem.getCount() > 1) {
+                    orderItem.setCount(orderItem.getCount() - 1);
+                } else {
+                    cart.getOrderItems().remove(orderItem);
                 }
                 break;
             case DELETE:
-                if (existingOrderItem.isPresent()) {
-                    cart.getOrderItems().remove(existingOrderItem.get());
-                }
+                cart.getOrderItems().remove(orderItem);
                 break;
         }
-        orderRepository.save(cart);
+        return orderRepository.save(cart);
     }
 
-    public Map<Long, Integer> getCart() {
-        Order cart = getOrCreateCart();
-        Map<Long, Integer> cartItems = new HashMap<>();
-        for (OrderItem orderItem : cart.getOrderItems()) {
-            cartItems.put(orderItem.getItem().getId(), orderItem.getCount());
+    private Mono<Order> handleNewItem(Order cart, Item item, CartAction action) {
+        if (action != CartAction.PLUS) {
+            return Mono.just(cart);
         }
-        return cartItems;
+
+        return Mono.just(new OrderItem())
+                .doOnNext(newOrderItem->{
+                    newOrderItem.setOrder(cart);
+                newOrderItem.setItem(item);
+                newOrderItem.setCount(1);
+                newOrderItem.setPriceAtOrder(item.getPrice());
+                })
+                .doOnNext(cart.getOrderItems()::add)
+                .thenReturn(cart)
+                .flatMap(orderRepository::save);
     }
+
 }
