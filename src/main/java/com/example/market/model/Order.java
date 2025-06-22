@@ -1,27 +1,29 @@
 package com.example.market.model;
 
-import jakarta.persistence.*;
+
 import lombok.Data;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity
 @Data
 @Table(name = "orders")
 public class Order {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String status;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems = new ArrayList<>();
 
-    public BigDecimal totalSum() {
-        return orderItems.stream()
-                .map(OrderItem::getTotalPrice)
+    public Mono<BigDecimal> totalSum() {
+        return Mono.justOrEmpty(orderItems)
+                .flatMapMany(Flux::fromIterable)
+                .map(OrderItem::getPriceAtOrder)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }
