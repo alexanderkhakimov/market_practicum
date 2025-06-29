@@ -4,83 +4,99 @@ import com.example.market.model.Item;
 import com.example.market.model.Order;
 import com.example.market.model.OrderItem;
 import com.example.market.service.OrderService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.WebApplicationContext;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Flux;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
+@AutoConfigureWebTestClient
 @ActiveProfiles("test")
-@Transactional
 class OrderControllerIntegrationTest {
 
     @Autowired
-    private WebApplicationContext context;
+    private WebTestClient webTestClient;
 
-    @Autowired
+    @MockitoBean
     private OrderService orderService;
 
-    private MockMvc mockMvc;
+    @Test
+    void testGetOrdersPage_noOrders() {
+        // Настраиваем mock для пустого списка заказов
+        when(orderService.findAllOrderByStatusNotWithItems("CART"))
+                .thenReturn(Flux.empty());
 
-    @BeforeEach
-    void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
+        webTestClient.get()
+                .uri("/orders")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class)
+                .consumeWith(result -> {
+                    String response = result.getResponseBody();
+                    assertNotNull(response);
+                    assertTrue(response.contains("Нет заказов"));
+                    assertFalse(response.contains("Заказ №"));
+                });
     }
-
-//    @Test
-//    void testGetOrderPage_orderFound_newOrderTrue() throws Exception {
-//
-//        Order order = new Order();
-//        order.setStatus("PENDING");
-//
-//        OrderItem item = new OrderItem();
-//        Item product = new Item();
-//        product.setPrice(new BigDecimal("50.00"));
-//        item.setItem(product);
-//        item.setPriceAtOrder(new BigDecimal("50.00"));
-//        item.setCount(1);
-//        order.setOrderItems(List.of(item));
-//
-//        doAnswer(invocation -> {
-//            Order savedOrder = invocation.getArgument(0);
-//            savedOrder.setId(1L);
-//            return null;
-//        }).when(orderService).saveOrder(any(Order.class));
-//
-//        orderService.saveOrder(order);
-//        Long id = order.getId();
-//
-//        when(orderService.findById(id)).thenReturn(Optional.of(order));
-//
-//        mockMvc.perform(get("/orders/" + id).param("newOrder", "true"))
-//                .andExpect(status().isOk())
-//                .andExpect(view().name("order"))
-//                .andExpect(model().attribute("order", order))
-//                .andExpect(model().attribute("newOrder", true));
-//    }
 
     @Test
-    void testGetOrdersPage_noOrders() throws Exception {
-        mockMvc.perform(get("/orders"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("orders"))
-                .andExpect(model().attribute("orders", new ArrayList<>()));
-    }
+    void testGetOrdersPage_withOrders() {
+        // Создаем тестовые данные
+        Item item1 = new Item();
+        item1.setId(1L);
+        item1.setTitle("Телефон");
+        item1.setPrice(new BigDecimal("500.00")); // Цена за единицу
 
+        Item item2 = new Item();
+        item2.setId(2L);
+        item2.setTitle("Ноутбук");
+        item2.setPrice(new BigDecimal("1500.00")); // Цена за единицу
+
+        OrderItem orderItem1 = new OrderItem();
+        orderItem1.setItem(item1);
+        orderItem1.setCount(2);
+        orderItem1.setPriceAtOrder(item1.getPrice().multiply(new BigDecimal(orderItem1.getCount()))); // 500 * 2 = 1000
+
+        OrderItem orderItem2 = new OrderItem();
+        orderItem2.setItem(item2);
+        orderItem2.setCount(1);
+        orderItem2.setPriceAtOrder(item2.getPrice()); // 1500 * 1 = 1500
+
+        Order order = new Order();
+        order.setId(1L);
+        order.setStatus("COMPLETED");
+        order.setOrderItems(List.of(orderItem1, orderItem2));
+
+
+        when(orderService.findAllOrderByStatusNotWithItems("CART"))
+                .thenReturn(Flux.just(order));
+
+        webTestClient.get()
+                .uri("/orders")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class)
+                .consumeWith(result -> {
+                    String response = result.getResponseBody();
+                    assertNotNull(response);
+
+                    assertTrue(response.contains("Заказы"));
+                    assertTrue(response.contains("Заказ №1"));
+
+                    assertTrue(response.contains("Телефон (2 шт.) 2000.00 руб."));
+                    assertTrue(response.contains("Ноутбук (1 шт.) 1500.00 руб."));
+
+                    assertTrue(response.contains("Сумма: 3500.00 руб."));
+                });
+    }
 }

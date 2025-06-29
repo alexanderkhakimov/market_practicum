@@ -2,6 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
+    <meta charset="UTF-8">
     <title>Витрина товаров</title>
     <style>
         table { width: 70%; margin-left: auto; margin-right: auto; }
@@ -9,6 +10,9 @@
         .item-table img { width: 300px; height: 300px; }
         .item-table td { padding: 5px; }
     </style>
+    <div th:if="${error}" style="color: red;">
+        <p th:text="${error}"></p>
+    </div>
 </head>
 
 <body>
@@ -76,7 +80,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <form th:action="@{/main/items/{id}(id=${item.id})}" method="post">
+                        <form th:action="@{/main/items/{id}(id=${item.id})}" method="post" enctype="application/x-www-form-urlencoded">
                             <button name="action" value="minus" th:disabled="${cart[item.id] == null}">-</button>
                             <span th:text="${cart[item.id] != null ? cart[item.id] : 0}"></span>
                             <button name="action" value="plus">+</button>

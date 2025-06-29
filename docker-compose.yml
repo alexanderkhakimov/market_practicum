@@ -6,7 +6,11 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql_db:3306/market_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_R2DBC_URL: r2dbc:mysql://mysql_db:3306/market_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_R2DBC_USERNAME: root
+      SPRING_R2DBC_PASSWORD: 19931012
+      SPRING_R2DBC_POOL_ENABLED: true
+      SPRING_PROFILES_ACTIVE: docker # Указываем профиль docker
     depends_on:
       mysql_db:
         condition: service_healthy

@@ -3,6 +3,7 @@ package com.example.market.model;
 
 import lombok.Data;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.relational.core.mapping.Table;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -18,12 +19,12 @@ public class Order {
     private Long id;
     private String status;
 
+    @Transient
     private List<OrderItem> orderItems = new ArrayList<>();
 
-    public Mono<BigDecimal> totalSum() {
-        return Mono.justOrEmpty(orderItems)
-                .flatMapMany(Flux::fromIterable)
-                .map(OrderItem::getPriceAtOrder)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    public BigDecimal totalSum() {
+        return orderItems.stream()
+                .map(OrderItem::getTotalPrice)
+                .reduce(BigDecimal.ZERO,BigDecimal::add);
     }
 }

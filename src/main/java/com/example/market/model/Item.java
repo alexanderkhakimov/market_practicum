@@ -1,6 +1,7 @@
 package com.example.market.model;
 
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
@@ -18,4 +19,5 @@ public class Item {
     private BigDecimal price;
     private String imgPath;
     private String description;
+
 }

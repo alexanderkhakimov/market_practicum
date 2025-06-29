@@ -11,5 +11,7 @@ import java.util.List;
 @Repository
 public interface OrderRepository extends R2dbcRepository< Order, Long> {
     Mono<Order> findByStatus(String status);
+
     Flux<Order> findAllByStatusNot(String status);
+
 }

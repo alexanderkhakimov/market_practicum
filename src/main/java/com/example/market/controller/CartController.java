@@ -2,15 +2,17 @@ package com.example.market.controller;
 
 import com.example.market.helper.CartAction;
 import com.example.market.model.Order;
+import com.example.market.model.OrderItem;
 import com.example.market.service.CartService;
 import com.example.market.service.OrderService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 @Controller
 public class CartController {
@@ -23,38 +25,49 @@ public class CartController {
         this.cartService = cartService;
     }
 
-    @GetMapping("/cart/items")
-    public String getCartPage(Model model) {
-        Order cart = orderService.findOrderByStatus("CART")
-                .orElseThrow(() -> new IllegalArgumentException("Корзина пустая!"));
-        BigDecimal total = BigDecimal.ZERO;
-        if (cart != null) {
-            total = cart.totalSum();
-        }
-        model.addAttribute("items", cart != null ? cart.getOrderItems() : new ArrayList<>());
-        model.addAttribute("total", total);
-        model.addAttribute("empty", cart == null || cart.getOrderItems().isEmpty());
 
-        return "cart";
+    @GetMapping("/cart/items")
+    public Mono<String> getCartPage(Model model) {
+        return orderService.findOrderByStatus("CART")
+                .flatMap(cart -> {
+                    List<OrderItem> items = cart.getOrderItems() != null ?
+                            cart.getOrderItems() : Collections.emptyList();
+
+                    // Обертываем синхронный вызов в Mono
+                    BigDecimal total = items.isEmpty() ? BigDecimal.ZERO : cart.totalSum();
+
+                    model.addAttribute("items", items);
+                    model.addAttribute("total", total);
+                    model.addAttribute("empty", items.isEmpty());
+
+                    return Mono.just("cart");
+                })
+                .onErrorResume(e -> {
+                    model.addAttribute("error", "Ошибка загрузки корзины: " + e.getMessage());
+                    model.addAttribute("items", Collections.emptyList());
+                    model.addAttribute("total", BigDecimal.ZERO);
+                    model.addAttribute("empty", true);
+                    return Mono.just("cart");
+                });
     }
 
     @PostMapping("/cart/items/{id}")
-    public String updateCart(
+    public Mono<String> updateCart(
             @PathVariable Long id,
             @RequestParam("action") String action) {
-        cartService.updateCart(id, CartAction.valueOf(action.toUpperCase()));
-        return "redirect:/cart/items";
+        return cartService.updateCart(id, CartAction.valueOf(action.toUpperCase()))
+                .thenReturn("redirect:/cart/items");
     }
 
     @PostMapping("/buy")
-    public String buy() {
+    public Mono<String> buy() {
         return orderService.findOrderByStatus("CART")
                 .filter(cart -> !cart.getOrderItems().isEmpty())
-                .map(cart -> {
+                .flatMap(cart -> {
                     cart.setStatus("PENDING");
-                    orderService.saveOrder(cart);
-                    return "redirect:/orders/" + cart.getId() + "?newOrder=true";
+                    return orderService.saveOrder(cart)
+                            .thenReturn ("redirect:/orders/" + cart.getId() + "?newOrder=true)");
                 })
-                .orElse("redirect:/cart/items");
+                .defaultIfEmpty("redirect:/cart/items");
     }
 }
