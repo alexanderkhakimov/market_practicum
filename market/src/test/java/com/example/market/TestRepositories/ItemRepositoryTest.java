@@ -15,7 +15,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
-import java.util.List;
+import reactor.test.StepVerifier;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -70,4 +70,23 @@ class ItemRepositoryTest {
         assertNotNull(result);
         assertEquals(1, result);
     }
+
+//    @Test
+//    void testFindBySearchCaching() {
+//        String search = "phone";
+//        int limit = 10;
+//        long offset = 0;
+//        String sortField = "price";
+//        String sortDirection = "ASC";
+//
+//        // Первый вызов: запрос к базе и кэширование
+//        StepVerifier.create(itemRepository.findBySearch(search, limit, offset, sortField, sortDirection))
+//                .expectNextCount(1) // Укажите ожидаемое количество
+//                .verifyComplete();
+//
+//        // Второй вызов: данные из кэша
+//        StepVerifier.create(itemRepository.findBySearch(search, limit, offset, sortField, sortDirection))
+//                .expectNextCount(1)
+//                .verifyComplete();
+//    }
 }

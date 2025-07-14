@@ -8,8 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
@@ -26,10 +26,10 @@ class ItemControllerTest {
     @Autowired
     private WebTestClient webTestClient;
 
-    @MockitoBean
+    @MockBean
     private ItemService itemService;
 
-    @MockitoBean
+    @MockBean
     private CartService cartService;
 
 
@@ -43,7 +43,7 @@ class ItemControllerTest {
         Mockito.when(itemService.findById(1L))
                 .thenReturn(Mono.just(item));
 
-        // Act & Assert
+
         webTestClient.get()
                 .uri("/main/items/1")
                 .accept(MediaType.TEXT_HTML) // Ожидаем HTML ответ

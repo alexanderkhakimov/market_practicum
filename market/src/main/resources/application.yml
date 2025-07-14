@@ -16,6 +16,11 @@ spring:
       reactor.netty: DEBUG
       org.springframework.data.r2dbc: DEBUG
 
+
+  redis:
+    host: localhost
+    port: 6379
+    database: 0
 # Общие настройки R2DBC и Liquibase для всех профилей
   r2dbc:
     pool:

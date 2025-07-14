@@ -28,7 +28,7 @@ public class PaymentService {
     public Mono<PaymentResponse> processPayment(PaymentRequest request) {
       return Mono.fromCallable(()->{
           BigDecimal currentBalance = balance.get();
-          BigDecimal paymentAmount = request.amount();
+          BigDecimal paymentAmount = request.getAmount();
 
           if(currentBalance.compareTo(paymentAmount) < 0){
               throw  new BalanceException( "Отрицательный баланс: " + currentBalance + " < " + paymentAmount);
@@ -39,7 +39,7 @@ public class PaymentService {
 
           PaymentResponse response = PaymentResponse.builder()
                   .paymentId(UUID.randomUUID().toString())
-                  .orderId(request.orderId())
+                  .orderId(request.getOrderId())
                   .amount(paymentAmount)
                   .status("SUCCESS")
                   .balanceAfterPayment(newBalance)
