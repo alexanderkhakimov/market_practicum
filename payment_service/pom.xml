@@ -14,6 +14,17 @@
 	<packaging>jar</packaging>
 
 	<dependencies>
+		<!-- Lombok -->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.openapitools</groupId>
+			<artifactId>jackson-databind-nullable</artifactId>
+			<version>0.2.6</version>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webflux</artifactId>
@@ -84,6 +95,7 @@
 								<interfaceOnly>true</interfaceOnly>
 								<reactive>true</reactive>
 								<useSpringBoot3>true</useSpringBoot3>
+								<openApiNullable>false</openApiNullable>
 							</configOptions>
 						</configuration>
 					</execution>

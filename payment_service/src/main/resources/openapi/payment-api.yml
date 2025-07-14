@@ -1,0 +1,107 @@
+  openapi: 3.0.3
+  info:
+    title: Payment Service API
+    version: 1.0.0
+    description: API for processing payments and checking balance
+  servers:
+    - url: http://localhost:8081
+      description: Local server
+  paths:
+    /api/payments/balance:
+      get:
+        summary: Get current balance
+        operationId: getBalance
+        responses:
+          '200':
+            description: Баланс
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/BalanceResponse'
+    /api/payments:
+      post:
+        summary: Process a payment
+        operationId: processPayment
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentRequest'
+        responses:
+          '200':
+            description: Оплата прошла успешно!
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/PaymentResponse'
+          '400':
+            description: Отрицательный баланс
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+  components:
+    schemas:
+      PaymentRequest:
+        type: object
+        properties:
+          orderId:
+            type: string
+            description: ID of the order
+          amount:
+            type: String
+            format: Decimal
+            example: "123.45"
+            description: Payment amount
+          paymentMethod:
+            type: string
+            description: Payment method (e.g., CARD, CASH)
+        required:
+          - orderId
+          - amount
+          - paymentMethod
+      PaymentResponse:
+        type: object
+        properties:
+          paymentId:
+            type: string
+            description: Unique payment ID
+          orderId:
+            type: string
+            description: ID of the order
+          status:
+            type: string
+            description: Payment status (e.g., SUCCESS, FAILED)
+          amount:
+            type: String
+            format: Decimal
+            example: "123.45"
+            description: Payment amount
+          balanceAfterPayment:
+            type: number
+            format: double
+            description: Balance after payment
+        required:
+          - paymentId
+          - orderId
+          - status
+          - amount
+          - balanceAfterPayment
+      BalanceResponse:
+        type: object
+        properties:
+          balance:
+            type: number
+            format: double
+            description: Current balance
+        required:
+          - balance
+      ErrorResponse:
+        type: object
+        properties:
+          message:
+            type: string
+            description: Error message
+        required:
+          - message
