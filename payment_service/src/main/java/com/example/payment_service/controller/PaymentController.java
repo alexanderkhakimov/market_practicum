@@ -4,13 +4,10 @@ import com.example.payment_service.model.BalanceResponse;
 import com.example.payment_service.model.PaymentRequest;
 import com.example.payment_service.model.PaymentResponse;
 import com.example.payment_service.service.PaymentService;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
-@Controller
+@RestController
 @RequestMapping("/api/payments")
 
 public class PaymentController {
@@ -26,7 +23,7 @@ public class PaymentController {
     }
 
     @PostMapping
-    public Mono<PaymentResponse> processPayment(PaymentRequest request) {
+    public Mono<PaymentResponse> processPayment(@RequestBody PaymentRequest request) {
         return paymentService.processPayment(request);
     }
 }

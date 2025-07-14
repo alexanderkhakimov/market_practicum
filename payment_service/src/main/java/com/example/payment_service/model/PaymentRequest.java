@@ -1,7 +1,9 @@
 package com.example.payment_service.model;
 
-import java.math.BigDecimal;
+import lombok.Builder;
 
+import java.math.BigDecimal;
+@Builder
 public record PaymentRequest(
         String orderId,
         BigDecimal amount,
