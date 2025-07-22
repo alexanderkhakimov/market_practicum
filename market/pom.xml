@@ -117,38 +117,50 @@
             <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-client</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.openapitools</groupId>
-                <artifactId>openapi-generator-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <configuration>
-                            <inputSpec>${project.basedir}/../payment_service/src/main/resources/openapi/payment-api.yml</inputSpec>
-                            <generatorName>java</generatorName>
-                            <apiPackage>com.example.market.client</apiPackage>
-                            <modelPackage>com.example.market.model</modelPackage>
-                            <generateApis>true</generateApis>
-                            <generateModels>true</generateModels>
-                            <configOptions>
-                                <library>webclient</library>
-                                <reactive>true</reactive>
-                                <useJakartaEe>true</useJakartaEe>
-                                <openApiNullable>false</openApiNullable>
-                                <useRecord>true</useRecord>
-                                <useLombok>true</useLombok>
-                            </configOptions>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+<!--            <plugin>-->
+<!--                <groupId>org.openapitools</groupId>-->
+<!--                <artifactId>openapi-generator-maven-plugin</artifactId>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <phase>generate-sources</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>generate</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <inputSpec>${project.basedir}/../payment_service/src/main/resources/openapi/payment-api.yml</inputSpec>-->
+<!--                            <generatorName>java</generatorName>-->
+<!--                            <apiPackage>com.example.market.client</apiPackage>-->
+<!--                            <modelPackage>com.example.market.model</modelPackage>-->
+<!--                            <generateApis>true</generateApis>-->
+<!--                            <generateModels>true</generateModels>-->
+<!--                            <configOptions>-->
+<!--                                <library>webclient</library>-->
+<!--                                <reactive>true</reactive>-->
+<!--                                <useJakartaEe>true</useJakartaEe>-->
+<!--                                <openApiNullable>false</openApiNullable>-->
+<!--                                <interfaceOnly>true</interfaceOnly> -->
+<!--                                <useSpringBoot3>true</useSpringBoot3> -->
+<!--                                <useTags>true</useTags>-->
+<!--                                <serializationLibrary>jackson</serializationLibrary>-->
+<!--                            </configOptions>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
         </plugins>
     </build>
 </project>
