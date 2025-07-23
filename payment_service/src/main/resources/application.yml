@@ -3,9 +3,19 @@ server:
 spring:
   application:
     name: payment_service
+security:
+  oauth2:
+    resourceserver:
+      jwt:
+        jwk-set-uri: http://localhost:8082/realms/store-realm/protocol/openid-connect/certs
 payment:
   balance: 1000.0
 logging:
   level:
     com.example: DEBUG
     org.springframework: INFO
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:8082/realms/store-realm/protocol/openid-connect/certs

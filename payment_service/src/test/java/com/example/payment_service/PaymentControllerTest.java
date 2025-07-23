@@ -87,4 +87,25 @@ class PaymentControllerTest {
                 .expectBody()
                 .jsonPath("$.message").isEqualTo("Отрицательный баланс: 1000.0 < 2000.0");
     }
+    @Test
+    @WithMockUser(authorities = {"SCOPE_payment:read"})
+    public void getBalance_WhenAuthorized_ShouldSucceed() {
+        BalanceResponse response = new BalanceResponse(new BigDecimal(1000));
+        when(paymentService.getBalance()).thenReturn(Mono.just(response));
+
+        webTestClient.get()
+                .uri("/api/payments/balance")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(BalanceResponse.class)
+                .isEqualTo(response);
+    }
+
+    @Test
+    public void getBalance_WhenNotAuthorized_ShouldReturnForbidden() {
+        webTestClient.get()
+                .uri("/api/payments/balance")
+                .exchange()
+                .expectStatus().isUnauthorized();
+    }
 }
