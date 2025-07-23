@@ -7,14 +7,11 @@ import com.example.market.service.CartService;
 import com.example.market.service.ItemService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -34,7 +31,6 @@ public class ItemController {
     private static final Logger logger = LoggerFactory.getLogger(ItemController.class);
 
     private final ItemService itemService;
-
     private final CartService cartService;
 
     public ItemController(ItemService itemService, CartService cartService) {
@@ -53,10 +49,11 @@ public class ItemController {
             @RequestParam(defaultValue = "NO") SortType sort,
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(defaultValue = "1") int pageNumber,
-            Model model) {
+            Model model,
+            Authentication authentication) {
 
         PageRequest pageRequest = PageRequest.of(
-                pageNumber - 1,  // Spring Data использует нумерацию с 0
+                pageNumber - 1, // Spring Data использует нумерацию с 0
                 pageSize,
                 sort == SortType.ALPHA ? Sort.by("title") :
                         sort == SortType.PRICE ? Sort.by("price") :
@@ -90,6 +87,7 @@ public class ItemController {
                     "hasNext", hasNext,
                     "hasPrevious", hasPrevious
             ));
+            model.addAttribute("isAuthenticated", authentication != null && authentication.isAuthenticated());
 
             return cartService.getCart()
                     .doOnSuccess(cart -> model.addAttribute("cart", cart))
@@ -103,6 +101,7 @@ public class ItemController {
             ));
             model.addAttribute("error", "Ошибка загрузки товаров");
             model.addAttribute("items", Collections.emptyList());
+            model.addAttribute("isAuthenticated", authentication != null && authentication.isAuthenticated());
             return Mono.just("main");
         });
     }
@@ -114,47 +113,33 @@ public class ItemController {
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Товар не найден!")))
                 .flatMap(item -> {
                     model.addAttribute("item", item);
-                    return Mono.just("item");
+                    return cartService.getCart()
+                            .doOnSuccess(cart -> model.addAttribute("cart", cart))
+                            .thenReturn("item");
                 });
     }
 
-//    @PostMapping("/items/{id}")
-//    public Mono<String> updateCart(
-//            @PathVariable Long id,
-//            @RequestParam("action") String action) {
-//        logger.info("Received updateCart request for itemId: {} with action: {}", id, action);
-//        System.out.println("HELLO");
-//        return cartService.updateCart(id, CartAction.valueOf(action.toUpperCase()))
-//                .thenReturn("redirect:/main/items")
-//                .onErrorResume(e -> {
-//                    logger.error("Error updating cart for itemId: {}", id, e);
-//                    return Mono.just("redirect:/main/items?error=Ошибка при обновлении корзины");
-//                });
-//    }
-@PostMapping("/items/{id}")
-public Mono<String> updateCart(
-        @PathVariable Long id,
-        @RequestParam(value = "action", required = false) String action) {
-    Logger logger = LoggerFactory.getLogger(ItemController.class);
-    logger.info("Received updateCart request for itemId: {} with action: {}", id, action);
-    if (action == null || action.trim().isEmpty()) {
-        logger.error("Action parameter is missing or empty for itemId: {}", id);
-        return Mono.just("redirect:/main/items?error=" + URLEncoder.encode("Параметр action отсутствует", StandardCharsets.UTF_8));
-    }
-    try {
-        CartAction cartAction = CartAction.valueOf(action.toUpperCase());
-        return cartService.updateCart(id, cartAction)
-                .thenReturn("redirect:/main/items")
-                .onErrorResume(e -> {
-                    logger.error("Error updating cart for itemId: {}", id, e);
-                    return Mono.just("redirect:/main/items?error=" + URLEncoder.encode("Ошибка при обновлении корзины: " + e.getMessage(), StandardCharsets.UTF_8));
-                });
-    } catch (IllegalArgumentException e) {
-        logger.error("Invalid action value: {} for itemId: {}", action, id, e);
-        return Mono.just("redirect:/main/items?error=" + URLEncoder.encode("Недопустимое действие: " + action, StandardCharsets.UTF_8));
+    @PostMapping("/items/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public Mono<String> updateCart(
+            @PathVariable Long id,
+            @RequestParam(value = "action", required = false) String action) {
+        logger.info("Received updateCart request for itemId: {} with action: {}", id, action);
+        if (action == null || action.trim().isEmpty()) {
+            logger.error("Action parameter is missing or empty for itemId: {}", id);
+            return Mono.just("redirect:/main/items?error=" + URLEncoder.encode("Параметр action отсутствует", StandardCharsets.UTF_8));
+        }
+        try {
+            CartAction cartAction = CartAction.valueOf(action.toUpperCase());
+            return cartService.updateCart(id, cartAction)
+                    .thenReturn("redirect:/main/items")
+                    .onErrorResume(e -> {
+                        logger.error("Error updating cart for itemId: {}", id, e);
+                        return Mono.just("redirect:/main/items?error=" + URLEncoder.encode("Ошибка при обновлении корзины: " + e.getMessage(), StandardCharsets.UTF_8));
+                    });
+        } catch (IllegalArgumentException e) {
+            logger.error("Invalid action value: {} for itemId: {}", action, id, e);
+            return Mono.just("redirect:/main/items?error=" + URLEncoder.encode("Недопустимое действие: " + action, StandardCharsets.UTF_8));
+        }
     }
 }
-}
-
-
-

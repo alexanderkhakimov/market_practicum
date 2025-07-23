@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="ru" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title>Корзина товаров</title>
@@ -9,27 +9,37 @@
             text-align: center;
             margin-bottom: 20px;
         }
+        table { width: 70%; margin-left: auto; margin-right: auto; }
+        td { padding: 5px; }
     </style>
 </head>
 <body>
-<a href="/orders" style="float:right;">
-    <b>ЗАКАЗЫ ⤵</b>
-</a>
-<a href="/main/items" style="float:right;">
-    <b>ГЛАВНАЯ ⤵</b>
-</a>
+<div sec:authorize="isAuthenticated()">
+    <a href="/orders" style="float:right;">
+        <b>ЗАКАЗЫ ⤵</b>
+    </a>
+    <a href="/main/items" style="float:right;">
+        <b>ГЛАВНАЯ ⤵</b>
+    </a>
+    <a href="/logout" style="float:right;">
+        <b>ВЫЙТИ ⤵</b>
+    </a>
+</div>
+<div sec:authorize="!isAuthenticated()">
+    <a href="/login" style="float:right;">
+        <b>ВОЙТИ ⤵</b>
+    </a>
+</div>
 
-<!-- Отображение ошибки, если есть -->
 <div th:if="${error}" class="error">
     <p th:text="${error}"></p>
 </div>
 
-<!-- Отображение сообщения, если корзина пуста -->
 <div th:if="${empty}" style="text-align:center;">
     <p>Корзина пуста</p>
 </div>
 
-<table style="width:70%;margin-left:auto;margin-right:auto;" th:unless="${empty}">
+<table th:unless="${empty}">
     <tr th:each="orderItem : ${items}">
         <td>
             <table>
@@ -47,11 +57,11 @@
                     </td>
                 </tr>
                 <tr><td th:text="${orderItem.item.getDescription()}"></td></tr>
-                <tr>
+                <tr sec:authorize="isAuthenticated()">
                     <td>
-                        <form th:action="${'/cart/items/'+orderItem.item.getId()}" method="post">
+                        <form th:action="@{/cart/items/{id}(id=${orderItem.item.id})}" method="post">
                             <button name="action" value="minus">-</button>
-                            <span th:text="${orderItem.getCount()}"></span>
+                            <span th:text="${orderItem.quantity}"></span>
                             <button name="action" value="plus">+</button>
                             <button name="action" value="delete" style="float:right;">✗</button>
                         </form>
@@ -70,9 +80,9 @@
             <b th:text="'Текущий баланс: '+${balance}+' руб.'"></b>
         </td>
     </tr>
-    <tr>
+    <tr sec:authorize="isAuthenticated()">
         <td style="text-align:right">
-            <form action="/buy" method="post" th:if="${canPay}">
+            <form th:action="@{/buy}" method="post" th:if="${canPay}">
                 <button>Купить</button>
             </form>
             <p th:unless="${canPay}" style="color: red;">

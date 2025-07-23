@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-
+<html lang="ru" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title>Витрина товаров</title>
@@ -9,19 +8,31 @@
         .item-table { margin: 10px; }
         .item-table img { width: 300px; height: 300px; }
         .item-table td { padding: 5px; }
+        .error { color: red; text-align: center; }
     </style>
-    <div th:if="${error}" style="color: red;">
-        <p th:text="${error}"></p>
-    </div>
 </head>
-
 <body>
-<a href="/orders" style="float:right;">
-    <b>ЗАКАЗЫ ⤵</b>
-</a>
-<a href="/cart/items" style="float:right;">
-    <b>КОРЗИНА ⤵</b>
-</a>
+<div sec:authorize="isAuthenticated()">
+    <a href="/orders" style="float:right;">
+        <b>ЗАКАЗЫ ⤵</b>
+    </a>
+    <a href="/cart/items" style="float:right;">
+        <b>КОРЗИНА (<span th:text="${cart.size() ?: 0}"></span>) ⤵</b>
+    </a>
+    <a href="/logout" style="float:right;">
+        <b>ВЫЙТИ ⤵</b>
+    </a>
+</div>
+<div sec:authorize="!isAuthenticated()">
+    <a href="/login" style="float:right;">
+        <b>ВОЙТИ ⤵</b>
+    </a>
+</div>
+
+<div th:if="${error}" class="error">
+    <p th:text="${error}"></p>
+</div>
+
 <table>
     <tr>
         <td>
@@ -50,9 +61,9 @@
                     </select>
                 </p>
                 <p>
-                    <button th:if="${paging.hasPrevious}" name="pageNumber" th:value="${paging.pageNumber - 1}">&lt;</button>
+                    <button th:if="${paging.hasPrevious}" name="pageNumber" th:value="${paging.pageNumber - 1}"><</button>
                     <span th:text="${'Страница: ' + paging.pageNumber}"></span>
-                    <button th:if="${paging.hasNext}" name="pageNumber" th:value="${paging.pageNumber + 1}">&gt;</button>
+                    <button th:if="${paging.hasNext}" name="pageNumber" th:value="${paging.pageNumber + 1}">></button>
                 </p>
             </form>
         </td>
@@ -62,7 +73,7 @@
             <table class="item-table">
                 <tr>
                     <td>
-                        <a th:href="@{items/{id}(id=${item.id})}">
+                        <a th:href="@{/main/items/{id}(id=${item.id})}">
                             <img th:src="@{${item.imgPath}}" alt="Item image">
                         </a>
                     </td>
@@ -78,7 +89,7 @@
                 <tr>
                     <td th:text="${item.description}"></td>
                 </tr>
-                <tr>
+                <tr sec:authorize="isAuthenticated()">
                     <td>
                         <form th:action="@{/main/items/{id}(id=${item.id})}" method="post" enctype="application/x-www-form-urlencoded">
                             <button name="action" value="minus" th:disabled="${cart[item.id] == null}">-</button>
