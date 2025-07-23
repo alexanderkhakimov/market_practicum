@@ -11,6 +11,7 @@ import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
@@ -81,5 +82,40 @@ class ItemControllerTest {
                     assertTrue(html.contains("Test Item"));
                     assertTrue(html.contains("99.99"));
                 });
+    }
+    @Test
+    public void getAllProducts_WhenNotAuthenticated_ShouldReturnItems() {
+        Item item = new Item();
+        item.setId(1L);
+        item.setTitle("Test Item");
+        item.setPrice(new BigDecimal("99.99"));
+        item.setDescription("Description");
+        item.setImgPath("image.jpg");
+        when(itemService.findById()).thenReturn(Flux.just(item));
+
+        webTestClient.get()
+                .uri("/products")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(Item.class).hasSize(1);
+    }
+
+    @Test
+    @WithMockUser
+    public void addToCart_WhenAuthenticated_ShouldSucceed() {
+        when(itemService.findById(1L)).thenReturn(Mono.empty());
+
+        webTestClient.post()
+                .uri("/products/cart/add/1")
+                .exchange()
+                .expectStatus().isOk();
+    }
+
+    @Test
+    public void addToCart_WhenNotAuthenticated_ShouldReturnUnauthorized() {
+        webTestClient.post()
+                .uri("/products/cart/add/1")
+                .exchange()
+                .expectStatus().isUnauthorized();
     }
 }

@@ -16,7 +16,19 @@ spring:
       reactor.netty: DEBUG
       org.springframework.data.r2dbc: DEBUG
 
-
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: web-app-client
+            client-secret: PWmN5CU5KuHtzh2j1pauEkxBpy61ERYY
+            authorization-grant-type: client_credentials
+            redirect-uri: http://localhost:8080/login/oauth2/code/keycloak
+            scope: openid,profile,email
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8082/realms/store-realm
   redis:
     host: localhost
     port: 6379
