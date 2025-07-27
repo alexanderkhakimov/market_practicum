@@ -1,7 +1,7 @@
 package com.example.market.controller;
 
-import com.example.market.helper.CartAction;
-import com.example.market.helper.SortType;
+import com.example.market.enums.CartAction;
+import com.example.market.enums.SortType;
 import com.example.market.model.Item;
 import com.example.market.service.CartService;
 import com.example.market.service.ItemService;

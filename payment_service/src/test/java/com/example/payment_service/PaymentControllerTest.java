@@ -43,10 +43,11 @@ class PaymentControllerTest {
 
     @Test
     void testProcessPaymentSuccess() {
-        PaymentRequest request = new PaymentRequest();
-        request.setOrderId("order123");
-        request.setAmount(new BigDecimal("100.0"));
-        request.setPaymentMethod("CARD");
+        PaymentRequest request = PaymentRequest.builder()
+                .orderId("order123")
+                .amount(new BigDecimal("100.0"))
+                .paymentMethod("CARD")
+                .build();
 
         PaymentResponse response =PaymentResponse.builder()
                 .paymentId("payment123")
@@ -70,10 +71,11 @@ class PaymentControllerTest {
 
     @Test
     void testProcessPaymentInsufficientBalance() {
-        PaymentRequest request = new PaymentRequest();
-        request.setOrderId("order123");
-        request.setAmount(new BigDecimal("2000.0"));
-        request.setPaymentMethod("CARD");
+        PaymentRequest request = PaymentRequest.builder()
+                .orderId("order123")
+                .amount(new BigDecimal("2000.0"))
+                .paymentMethod("CARD")
+                .build();
 
         when(paymentService.processPayment(any(PaymentRequest.class)))
                 .thenReturn(Mono.error(new BalanceException("Отрицательный баланс: 1000.0 < 2000.0")));

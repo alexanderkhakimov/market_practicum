@@ -1,6 +1,6 @@
 package com.example.market.service;
 
-import com.example.market.helper.CartAction;
+import com.example.market.enums.CartAction;
 import com.example.market.model.Item;
 import com.example.market.model.Order;
 import com.example.market.model.OrderItem;
@@ -126,12 +126,15 @@ public class CartService {
 
     private Mono<Order> handleExistingItem(Order cart, OrderItem orderItem, CartAction action) {
         logger.debug("Handling existing item with action: {}", action);
-        switch (action) {
-            case PLUS:
+
+        return switch (action) {
+            case PLUS -> {
                 orderItem.setCount(orderItem.getCount() + 1);
                 logger.debug("Increased quantity for item: {}", orderItem.getItem().getTitle());
-                break;
-            case MINUS:
+                yield orderRepository.save(cart)
+                        .doOnSuccess(o -> logger.debug("Cart saved after item update"));
+            }
+            case MINUS -> {
                 if (orderItem.getCount() > 1) {
                     orderItem.setCount(orderItem.getCount() - 1);
                     logger.debug("Decreased quantity for item: {}", orderItem.getItem().getTitle());
@@ -139,14 +142,16 @@ public class CartService {
                     cart.getOrderItems().remove(orderItem);
                     logger.debug("Removed item from cart: {}", orderItem.getItem().getTitle());
                 }
-                break;
-            case DELETE:
+                yield orderRepository.save(cart)
+                        .doOnSuccess(o -> logger.debug("Cart saved after item update"));
+            }
+            case DELETE -> {
                 cart.getOrderItems().remove(orderItem);
                 logger.debug("Deleted item from cart: {}", orderItem.getItem().getTitle());
-                break;
-        }
-        return orderRepository.save(cart)
-                .doOnSuccess(o -> logger.debug("Cart saved after item update"));
+                yield orderRepository.save(cart)
+                        .doOnSuccess(o -> logger.debug("Cart saved after item update"));
+            }
+        };
     }
 
     private Mono<Order> handleNewItem(Order cart, Item item, CartAction action) {
