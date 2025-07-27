@@ -1,0 +1,56 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-insert-initial-data
+      author: Alex
+      changes:
+        - insert:
+            tableName: item
+            columns:
+              - column:
+                  name: title
+                  value: "Laptop"
+              - column:
+                  name: price
+                  value: "999.99"
+              - column:
+                  name: img_path
+                  value: "/images/laptop.jpg"
+              - column:
+                  name: description
+                  value: "High-performance laptop"
+        - insert:
+            tableName: item
+            columns:
+              - column:
+                  name: title
+                  value: "Smartphone"
+              - column:
+                  name: price
+                  value: "499.99"
+              - column:
+                  name: img_path
+                  value: "/images/smartphone.jpg"
+              - column:
+                  name: description
+                  value: "Latest model smartphone"
+        - insert:
+            tableName: orders
+            columns:
+              - column:
+                  name: status
+                  value: "PENDING"
+        - insert:
+            tableName: order_item
+            columns:
+              - column:
+                  name: order_id
+                  value: "1"
+              - column:
+                  name: item_id
+                  value: "1"
+              - column:
+                  name: count
+                  value: "2"
+              - column:
+                  name: price_at_order
+                  value: "999.99"

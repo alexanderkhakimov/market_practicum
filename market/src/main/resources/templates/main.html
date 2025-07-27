@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Витрина товаров</title>
+    <style>
+        table { width: 70%; margin-left: auto; margin-right: auto; }
+        .item-table { margin: 10px; }
+        .item-table img { width: 300px; height: 300px; }
+        .item-table td { padding: 5px; }
+        .error { color: red; text-align: center; }
+    </style>
+</head>
+<body>
+<div sec:authorize="isAuthenticated()">
+    <a href="/orders" style="float:right;">
+        <b>ЗАКАЗЫ ⤵</b>
+    </a>
+    <a href="/cart/items" style="float:right;">
+        <b>КОРЗИНА (<span th:text="${cart.size() ?: 0}"></span>) ⤵</b>
+    </a>
+    <a href="/logout" style="float:right;">
+        <b>ВЫЙТИ ⤵</b>
+    </a>
+</div>
+<div sec:authorize="!isAuthenticated()">
+    <a href="/login" style="float:right;">
+        <b>ВОЙТИ ⤵</b>
+    </a>
+</div>
+
+<div th:if="${error}" class="error">
+    <p th:text="${error}"></p>
+</div>
+
+<table>
+    <tr>
+        <td>
+            <form action="/main/items" method="get">
+                <p>
+                    <label for="search">Найти: </label>
+                    <input id="search" style="width:300px;" name="search" th:value="${search}">
+                    <button type="submit">🔍</button>
+                </p>
+                <p>
+                    <label for="sort">Сортировка: </label>
+                    <select id="sort" name="sort" onchange="this.form.submit()">
+                        <option value="NO" th:selected="${sort == 'NO'}">нет</option>
+                        <option value="ALPHA" th:selected="${sort == 'ALPHA'}">по алфавиту</option>
+                        <option value="PRICE" th:selected="${sort == 'PRICE'}">по цене</option>
+                    </select>
+                </p>
+                <p>
+                    <label for="pageSize">Число товаров: </label>
+                    <select id="pageSize" name="pageSize" onchange="this.form.submit()">
+                        <option value="5" th:selected="${paging.pageSize == 5}">5</option>
+                        <option value="10" th:selected="${paging.pageSize == 10}">10</option>
+                        <option value="20" th:selected="${paging.pageSize == 20}">20</option>
+                        <option value="50" th:selected="${paging.pageSize == 50}">50</option>
+                        <option value="100" th:selected="${paging.pageSize == 100}">100</option>
+                    </select>
+                </p>
+                <p>
+                    <button th:if="${paging.hasPrevious}" name="pageNumber" th:value="${paging.pageNumber - 1}"><</button>
+                    <span th:text="${'Страница: ' + paging.pageNumber}"></span>
+                    <button th:if="${paging.hasNext}" name="pageNumber" th:value="${paging.pageNumber + 1}">></button>
+                </p>
+            </form>
+        </td>
+    </tr>
+    <tr th:each="itemsRow : ${items}">
+        <td th:each="item : ${itemsRow}">
+            <table class="item-table">
+                <tr>
+                    <td>
+                        <a th:href="@{/main/items/{id}(id=${item.id})}">
+                            <img th:src="@{${item.imgPath}}" alt="Item image">
+                        </a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <b th:text="${item.title}"></b>
+                    </td>
+                    <td>
+                        <b th:text="${item.price + ' руб.'}"></b>
+                    </td>
+                </tr>
+                <tr>
+                    <td th:text="${item.description}"></td>
+                </tr>
+                <tr sec:authorize="isAuthenticated()">
+                    <td>
+                        <form th:action="@{/main/items/{id}(id=${item.id})}" method="post" enctype="application/x-www-form-urlencoded">
+                            <button name="action" value="minus" th:disabled="${cart[item.id] == null}">-</button>
+                            <span th:text="${cart[item.id] != null ? cart[item.id] : 0}"></span>
+                            <button name="action" value="plus">+</button>
+                            <button name="action" value="delete" th:if="${cart[item.id] != null}" style="float:right;">Удалить</button>
+                            <button name="action" value="plus" th:if="${cart[item.id] == null}" style="float:right;">В корзину</button>
+                        </form>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

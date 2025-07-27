@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-insert-initial-data
+      author: Alex
+      changes:
+        - insert:
+            tableName: item
+            columns:
+              - column:
+                  name: title
+                  value: "Laptop3"
+              - column:
+                  name: price
+                  value: "43.99"
+              - column:
+                  name: img_path
+                  value: "/images/laptop.jpg"
+              - column:
+                  name: description
+                  value: "High-performance laptop"
+        - insert:
+            tableName: item
+            columns:
+              - column:
+                  name: title
+                  value: "Smartphone2"
+              - column:
+                  name: price
+                  value: "3233.99"
+              - column:
+                  name: img_path
+                  value: "/images/smartphone.jpg"
+              - column:
+                  name: description
+                  value: "Latest model smartphone"

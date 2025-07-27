@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-count-to-item
+      author: Alex
+      changes:
+        - addColumn:
+            tableName: item
+            columns:
+              - column:
+                  name: count
+                  type: int
+                  defaultValue: 0
+                  constraints:
+                    nullable: false

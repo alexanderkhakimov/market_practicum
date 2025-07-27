@@ -1,0 +1,80 @@
+spring:
+  application:
+    name: market
+  profiles:
+    active: local # По умолчанию local профиль
+  thymeleaf:
+    cache: false
+    encoding: UTF-8
+  webflux:
+    form-parsing: true
+  logging:
+    level:
+      root: INFO
+      com.example.market: DEBUG
+      org.springframework.web: DEBUG
+      reactor.netty: DEBUG
+      org.springframework.data.r2dbc: DEBUG
+
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: web-app-client
+            client-secret: PWmN5CU5KuHtzh2j1pauEkxBpy61ERYY
+            authorization-grant-type: client_credentials
+            redirect-uri: http://localhost:8080/login/oauth2/code/keycloak
+            scope: openid,profile,email
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8082/realms/store-realm
+  redis:
+    host: localhost
+    port: 6379
+    database: 0
+# Общие настройки R2DBC и Liquibase для всех профилей
+  r2dbc:
+    pool:
+      enabled: true
+      initial-size: 5
+      max-size: 10
+      max-idle-time: 30m
+  liquibase:
+    enabled: true
+    change-log: "classpath:db/changelog/db.changelog-master.yaml"
+    default-schema: market_db
+    parameters:
+      environment: dev
+
+# Локальная конфигурация (profile=local)
+---
+spring:
+  config:
+    activate:
+      on-profile: "local"
+  r2dbc:
+    url: "r2dbc:mysql://localhost:3306/market_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+    username: root
+    password: "19931012"
+  datasource:
+    url: "jdbc:mysql://localhost:3306/market_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+    username: root
+    password: "19931012"
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+# Docker конфигурация (profile=docker)
+---
+spring:
+  config:
+    activate:
+      on-profile: "docker"
+  r2dbc:
+    url: "r2dbc:mysql://mysql_db:3306/market_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+    username: root
+    password: "19931012"
+  datasource:
+    url: "jdbc:mysql://mysql_db:3306/market_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+    username: root
+    password: "19931012"
+    driver-class-name: com.mysql.cj.jdbc.Driver

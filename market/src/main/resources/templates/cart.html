@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Корзина товаров</title>
+    <style>
+        .error {
+            color: red;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        table { width: 70%; margin-left: auto; margin-right: auto; }
+        td { padding: 5px; }
+    </style>
+</head>
+<body>
+<div sec:authorize="isAuthenticated()">
+    <a href="/orders" style="float:right;">
+        <b>ЗАКАЗЫ ⤵</b>
+    </a>
+    <a href="/main/items" style="float:right;">
+        <b>ГЛАВНАЯ ⤵</b>
+    </a>
+    <a href="/logout" style="float:right;">
+        <b>ВЫЙТИ ⤵</b>
+    </a>
+</div>
+<div sec:authorize="!isAuthenticated()">
+    <a href="/login" style="float:right;">
+        <b>ВОЙТИ ⤵</b>
+    </a>
+</div>
+
+<div th:if="${error}" class="error">
+    <p th:text="${error}"></p>
+</div>
+
+<div th:if="${empty}" style="text-align:center;">
+    <p>Корзина пуста</p>
+</div>
+
+<table th:unless="${empty}">
+    <tr th:each="orderItem : ${items}">
+        <td>
+            <table>
+                <tr>
+                    <td>
+                        <img width="300" height="300" th:src="${orderItem.item.getImgPath()}">
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <b th:text="${orderItem.item.getTitle()}"></b>
+                    </td>
+                    <td>
+                        <b th:text="${orderItem.item.getPrice()}+' руб.'"></b>
+                    </td>
+                </tr>
+                <tr><td th:text="${orderItem.item.getDescription()}"></td></tr>
+                <tr sec:authorize="isAuthenticated()">
+                    <td>
+                        <form th:action="@{/cart/items/{id}(id=${orderItem.item.id})}" method="post">
+                            <button name="action" value="minus">-</button>
+                            <span th:text="${orderItem.quantity}"></span>
+                            <button name="action" value="plus">+</button>
+                            <button name="action" value="delete" style="float:right;">✗</button>
+                        </form>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <td style="text-align:right">
+            <b th:text="'Итого: '+${total}+' руб.'"></b>
+        </td>
+    </tr>
+    <tr>
+        <td style="text-align:right">
+            <b th:text="'Текущий баланс: '+${balance}+' руб.'"></b>
+        </td>
+    </tr>
+    <tr sec:authorize="isAuthenticated()">
+        <td style="text-align:right">
+            <form th:action="@{/buy}" method="post" th:if="${canPay}">
+                <button>Купить</button>
+            </form>
+            <p th:unless="${canPay}" style="color: red;">
+                Недостаточно средств на балансе для оплаты!
+            </p>
+        </td>
+    </tr>
+</table>
+</body>
+</html>
